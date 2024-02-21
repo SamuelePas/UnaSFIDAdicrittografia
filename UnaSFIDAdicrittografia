@@ -1,0 +1,163 @@
+// Una SFIDA di crittografia / Algoritmi
+// https://www.youtube.com/watch?v=Oj9HBEjrd38
+// https://replit.com/@samuelefbook/UnaSFIDAdicrittografia#main.cpp
+
+#include <iostream>
+#include <string>
+
+void stringToUpper(std::string &str) 
+{
+  for (unsigned int i = 0; i < str.size(); i++)
+    str.at(i) = std::toupper(str.at(i));
+  return;
+}
+
+void stringToLower(std::string &str) 
+{
+  for (unsigned int i = 0; i < str.size(); i++)
+    str.at(i) = std::tolower(str.at(i));
+  return;
+}
+
+std::string encryptString(std::string str, std::string key) 
+{
+  std::string encrypted("");
+  int ch = 0;
+  unsigned int k = 0;
+  for (unsigned int i = 0; i < str.size(); i++) 
+  {
+    ch = std::toupper(str.at(i));
+
+    if (ch > 63 && ch < 91) 
+    {
+      ch = (ch + key.at(k));
+
+      while (ch > 90)
+        ch -= 27;
+
+      k++;
+      if (k >= key.size())
+        k = 0;
+    }
+    encrypted.push_back(ch);
+  }
+  return encrypted;
+}
+
+std::string decryptString(std::string str, std::string key)
+{
+  std::string decrypted("");
+  unsigned char ch = 0;
+  unsigned int k = 0;
+  for (unsigned int i = 0; i < str.size(); i++)
+  {
+    ch = std::toupper(str.at(i));
+    if (ch > 63 && ch < 91) 
+    {
+      ch = 64 + (ch - (key.at(k) - 17)); // OK
+
+      while (ch < 64)
+        ch += 27;
+
+      while (ch > 90)
+        ch -= 27;
+
+      k++;
+      if (k >= key.size())
+        k = 0;
+    }
+    decrypted.push_back(ch);
+  }
+  return decrypted;
+}
+
+bool findKey(const std::string str, std::string &decrypted,
+             std::string &key_out, int maxKeyLenght, const char chL,
+             const char chH, const std::string word_to_search) 
+{
+  decrypted.clear();
+  key_out.clear();
+  char *key = new char[maxKeyLenght + 1];
+  for (int i = 0; i < maxKeyLenght + 1; i++)
+    key[i] = '\0';
+  key[0] = '@';
+  int pos = 0;
+
+  do 
+  {
+    for (char ch = chL; ch < chH + 1; ch++) 
+    {
+      key[0] = ch;
+      decrypted = decryptString(str, key);
+      {
+        if (decrypted.find(word_to_search) != std::string::npos) 
+        {
+          key_out = key;
+          delete[] key;
+          return true;
+        }
+      }
+    }
+    std::cout << "Try \"" << key << "\"        \r";
+
+    pos = 1;
+    do 
+    {
+      if (key[pos] == '\0') 
+      {
+        key[pos] = chL;
+        break;
+      } 
+      else 
+      {
+        key[pos]++;
+        if (key[pos] == chH + 1) 
+        {
+          key[pos] = chL;
+          pos++;
+        } 
+        else
+          break;
+      }
+    }
+    while (pos < maxKeyLenght + 1);
+  } 
+  while (pos < maxKeyLenght);
+
+  delete[] key;
+
+  return false;
+}
+
+int main() 
+{
+  std::string encryptded("usaughrsmjyupkmorqazvepiolwanmsbbughoctarmnnwaawnchmz"
+                         "ksgufyvfjtbyxjmohgi");
+  std::string decrypted("");
+  std::string key("");
+  const std::string word_to_search("@COME@");
+  const char chL = '@';
+  const char chH = 'Z';
+  const int maxKeyLenght = 5;
+
+  std::cout << "\nBrute force key finder by Samuele Pasqualini 2023\n\n";
+  std::cout << "Encrypted string : \n";
+  std::cout << "\"" << encryptded << "\"\n";
+
+  stringToUpper(encryptded);
+  if (findKey(encryptded, decrypted, key, maxKeyLenght, chL, chH,
+              word_to_search)) 
+  {
+    stringToLower(decrypted);
+    std::cout << "\"" << decrypted << "\"\n";
+    std::cout << "Decryption key = \"" << key << "\"\n";
+  } 
+  else 
+  {
+    std::cout << "Decryption key not found.";
+  }
+
+  std::cout << "\n\nPress ENTER to exit...";
+  std::cin.get();
+  return 0;
+}
